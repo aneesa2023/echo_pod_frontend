@@ -32,10 +32,6 @@ class ExploreScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: const Color(0xFFF6F0FA),
-      appBar: AppBar(
-        title: const Text("Explore Podcasts"),
-        centerTitle: true,
-      ),
       body: ListView.builder(
         itemCount: _dummyPodcasts.length,
         padding: const EdgeInsets.all(16),
