@@ -1,96 +1,164 @@
 import 'package:flutter/material.dart';
-import 'package:echo_pod_frontend/utils/constants.dart';
+import 'package:amplify_flutter/amplify_flutter.dart';
+import 'package:amplify_auth_cognito/amplify_auth_cognito.dart';
 
-class LoginScreen extends StatelessWidget {
+class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
+
+  @override
+  State<LoginScreen> createState() => _LoginScreenState();
+}
+
+class _LoginScreenState extends State<LoginScreen> {
+  final emailController = TextEditingController();
+  final passwordController = TextEditingController();
+  final codeController = TextEditingController();
+
+  bool showConfirmation = false;
+
+  Future<void> signUp() async {
+    try {
+      final email = emailController.text.trim();
+      final password = passwordController.text.trim();
+
+      await Amplify.Auth.signUp(
+        username: email,
+        password: password,
+        options: SignUpOptions(userAttributes: {
+          AuthUserAttributeKey.email: email,
+        }),
+      );
+
+      setState(() => showConfirmation = true);
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+            content: Text(
+                "Signup successful. Check your email for the confirmation code.")),
+      );
+    } catch (e) {
+      safePrint("Signup error: $e");
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text("Signup failed: ${e.toString()}")),
+      );
+    }
+  }
+
+  Future<void> confirmSignUp() async {
+    try {
+      final email = emailController.text.trim();
+      final code = codeController.text.trim();
+
+      final result = await Amplify.Auth.confirmSignUp(
+        username: email,
+        confirmationCode: code,
+      );
+
+      if (result.isSignUpComplete) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text("Email confirmed. Please log in.")),
+        );
+        setState(() => showConfirmation = false);
+      }
+    } catch (e) {
+      safePrint("Confirm error: $e");
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text("Confirmation failed: ${e.toString()}")),
+      );
+    }
+  }
+
+  Future<void> signIn() async {
+    try {
+      final session = await Amplify.Auth.fetchAuthSession();
+
+      if (session.isSignedIn) {
+        await Amplify.Auth.signOut();
+      }
+
+      final result = await Amplify.Auth.signIn(
+        username: emailController.text.trim(),
+        password: passwordController.text.trim(),
+      );
+
+      if (result.isSignedIn) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text("Login Successful")),
+        );
+        Navigator.pushReplacementNamed(context, '/menu');
+      }
+    } catch (e) {
+      safePrint("Login error: $e");
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text("Login failed: ${e.toString()}")),
+      );
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: const Color(0xFFF6F0FA),
       body: Center(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.symmetric(horizontal: 30, vertical: 60),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Text(
-                "EchoPod",
-                style: TextStyle(
-                  fontSize: 32,
-                  fontWeight: FontWeight.bold,
-                  color: kMainColor,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 24),
+          child: SingleChildScrollView(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                const Text("EchoPod Login",
+                    style:
+                        TextStyle(fontSize: 24, fontWeight: FontWeight.bold)),
+                const SizedBox(height: 32),
+                TextField(
+                  controller: emailController,
+                  decoration: const InputDecoration(labelText: "Email"),
                 ),
-              ),
-              const SizedBox(height: 8),
-              const Text(
-                "Login to continue",
-                style: TextStyle(fontSize: 16, color: Colors.grey),
-              ),
-              const SizedBox(height: 40),
-
-              // Email field
-              TextFormField(
-                decoration: InputDecoration(
-                  labelText: "Email",
-                  hintText: "you@example.com",
-                  filled: true,
-                  fillColor: Colors.white,
-                  prefixIcon: const Icon(Icons.email),
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
-                    borderSide: BorderSide.none,
-                  ),
+                const SizedBox(height: 12),
+                TextField(
+                  controller: passwordController,
+                  decoration: const InputDecoration(labelText: "Password"),
+                  obscureText: true,
                 ),
-              ),
-              const SizedBox(height: 20),
-
-              // Password field
-              TextFormField(
-                obscureText: true,
-                decoration: InputDecoration(
-                  labelText: "Password",
-                  hintText: "Enter your password",
-                  filled: true,
-                  fillColor: Colors.white,
-                  prefixIcon: const Icon(Icons.lock),
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
-                    borderSide: BorderSide.none,
+                const SizedBox(height: 24),
+                if (showConfirmation) ...[
+                  TextField(
+                    controller: codeController,
+                    decoration:
+                        const InputDecoration(labelText: "Confirmation Code"),
                   ),
-                ),
-              ),
-              const SizedBox(height: 30),
-
-              // Login Button
-              SizedBox(
-                width: double.infinity,
-                child: ElevatedButton(
-                  onPressed: () => Navigator.pushReplacementNamed(context, '/menu'),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: kMainColor,
-                    padding: const EdgeInsets.symmetric(vertical: 16),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
-                    ),
+                  const SizedBox(height: 16),
+                  ElevatedButton(
+                    onPressed: confirmSignUp,
+                    child: const Text("Confirm Code"),
                   ),
-                  child: const Text("Login", style: TextStyle(fontSize: 16)),
-                ),
-              ),
-              const SizedBox(height: 20),
-
-              // Sign Up Text
-              Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  const Text("Don't have an account?"),
-                  TextButton(
-                    onPressed: () => Navigator.pushNamed(context, '/signup'),
-                    child: const Text("Sign Up"),
-                  ),
+                  const SizedBox(height: 12),
                 ],
-              )
-            ],
+                ElevatedButton(
+                  onPressed: signIn,
+                  child: const Text("Login"),
+                ),
+                const SizedBox(height: 10),
+                TextButton(
+                  onPressed: () {
+                    Navigator.pushNamed(context, '/signup');
+                  },
+                  child: const Text("Don't have an account? Sign up"),
+                ),
+                ElevatedButton(
+                  onPressed: () async {
+                    try {
+                      await Amplify.Auth.signOut();
+                      Navigator.pushReplacementNamed(context, '/login');
+                    } catch (e) {
+                      safePrint("Logout error: $e");
+                    }
+                  },
+                  child: const Text("Logout"),
+                ),
+
+              ],
+            ),
           ),
         ),
       ),

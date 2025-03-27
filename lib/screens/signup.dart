@@ -1,112 +1,123 @@
 import 'package:flutter/material.dart';
-import 'package:echo_pod_frontend/utils/constants.dart';
+import 'package:amplify_flutter/amplify_flutter.dart';
+import 'package:amplify_auth_cognito/amplify_auth_cognito.dart';
 
-class SignupScreen extends StatelessWidget {
+class SignupScreen extends StatefulWidget {
   const SignupScreen({super.key});
+
+  @override
+  State<SignupScreen> createState() => _SignupScreenState();
+}
+
+class _SignupScreenState extends State<SignupScreen> {
+  final emailController = TextEditingController();
+  final passwordController = TextEditingController();
+  final codeController = TextEditingController();
+
+  bool showConfirmation = false;
+
+  Future<void> signUp() async {
+    try {
+      final email = emailController.text.trim();
+      final password = passwordController.text.trim();
+
+      await Amplify.Auth.signUp(
+        username: email,
+        password: password,
+        options: SignUpOptions(userAttributes: {
+          AuthUserAttributeKey.email: email,
+        }),
+      );
+
+      setState(() => showConfirmation = true);
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("Signup successful. Check your email for confirmation code.")),
+      );
+    } catch (e) {
+      safePrint("Signup error: $e");
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text("Signup failed: ${e.toString()}")),
+      );
+    }
+  }
+
+  Future<void> confirmSignUp() async {
+    try {
+      final email = emailController.text.trim();
+      final code = codeController.text.trim();
+
+      final result = await Amplify.Auth.confirmSignUp(
+        username: email,
+        confirmationCode: code,
+      );
+
+      if (result.isSignUpComplete) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text("Email confirmed. Please log in.")),
+        );
+        Navigator.pushReplacementNamed(context, '/login');
+      }
+    } catch (e) {
+      safePrint("Confirm error: $e");
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text("Confirmation failed: ${e.toString()}")),
+      );
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: const Color(0xFFF6F0FA),
+      appBar: AppBar(title: const Text("Sign Up")),
       body: Center(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.symmetric(horizontal: 30, vertical: 60),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Text(
-                "EchoPod",
-                style: TextStyle(
-                  fontSize: 32,
-                  fontWeight: FontWeight.bold,
-                  color: kMainColor,
-                ),
-              ),
-              const SizedBox(height: 8),
-              const Text(
-                "Create your account",
-                style: TextStyle(fontSize: 16, color: Colors.grey),
-              ),
-              const SizedBox(height: 40),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 24),
+          child: SingleChildScrollView(
+            child: Column(
+              children: [
+                const Text("Create Your EchoPod Account",
+                    style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold)),
+                const SizedBox(height: 30),
 
-              // Name field
-              TextFormField(
-                decoration: InputDecoration(
-                  labelText: "Name",
-                  hintText: "Your full name",
-                  filled: true,
-                  fillColor: Colors.white,
-                  prefixIcon: const Icon(Icons.person),
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
-                    borderSide: BorderSide.none,
-                  ),
+                TextField(
+                  controller: emailController,
+                  decoration: const InputDecoration(labelText: "Email"),
                 ),
-              ),
-              const SizedBox(height: 20),
+                const SizedBox(height: 12),
 
-              // Email field
-              TextFormField(
-                decoration: InputDecoration(
-                  labelText: "Email",
-                  hintText: "you@example.com",
-                  filled: true,
-                  fillColor: Colors.white,
-                  prefixIcon: const Icon(Icons.email),
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
-                    borderSide: BorderSide.none,
-                  ),
+                TextField(
+                  controller: passwordController,
+                  decoration: const InputDecoration(labelText: "Password"),
+                  obscureText: true,
                 ),
-              ),
-              const SizedBox(height: 20),
+                const SizedBox(height: 20),
 
-              // Password field
-              TextFormField(
-                obscureText: true,
-                decoration: InputDecoration(
-                  labelText: "Password",
-                  hintText: "Enter your password",
-                  filled: true,
-                  fillColor: Colors.white,
-                  prefixIcon: const Icon(Icons.lock),
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
-                    borderSide: BorderSide.none,
+                if (showConfirmation) ...[
+                  TextField(
+                    controller: codeController,
+                    decoration: const InputDecoration(labelText: "Confirmation Code"),
                   ),
+                  const SizedBox(height: 16),
+                  ElevatedButton(
+                    onPressed: confirmSignUp,
+                    child: const Text("Confirm Sign Up"),
+                  ),
+                  const SizedBox(height: 12),
+                ] else
+                  ElevatedButton(
+                    onPressed: signUp,
+                    child: const Text("Sign Up"),
+                  ),
+
+                const SizedBox(height: 10),
+                TextButton(
+                  onPressed: () => Navigator.pop(context),
+                  child: const Text("Already have an account? Log in"),
                 ),
-              ),
-              const SizedBox(height: 30),
-
-              // Sign Up Button
-              SizedBox(
-                width: double.infinity,
-                child: ElevatedButton(
-                  onPressed: () => Navigator.pushReplacementNamed(context, '/menu'),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: kMainColor,
-                    padding: const EdgeInsets.symmetric(vertical: 16),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                  ),
-                  child: const Text("Sign Up", style: TextStyle(fontSize: 16)),
-                ),
-              ),
-              const SizedBox(height: 20),
-
-              // Go to Login
-              Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  const Text("Already have an account?"),
-                  TextButton(
-                    onPressed: () => Navigator.pushReplacementNamed(context, '/login'),
-                    child: const Text("Login"),
-                  ),
-                ],
-              )
-            ],
+              ],
+            ),
           ),
         ),
       ),
