@@ -1,42 +1,57 @@
-import 'package:echo_pod_frontend/screens/podcast_detail.dart';
+import 'dart:convert';
 import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
+import 'package:echo_pod_frontend/screens/podcast_detail.dart';
 
-class ExploreScreen extends StatelessWidget {
+class ExploreScreen extends StatefulWidget {
   const ExploreScreen({super.key});
 
-  final List<Map<String, dynamic>> _dummyPodcasts = const [
-    {
-      "topic": "Binary Trees",
-      "desc": "Learn how to traverse and manipulate binary trees.",
-      "difficulty": "Beginner",
-      "chapters": 1,
-      "voice": "Danielle"
-    },
-    {
-      "topic": "Deep Learning",
-      "desc": "Understand the foundations of neural networks and backpropagation.",
-      "difficulty": "Advanced",
-      "chapters": 3,
-      "voice": "Matthew"
-    },
-    {
-      "topic": "World War II",
-      "desc": "A podcast on the key events and impact of World War II.",
-      "difficulty": "Intermediate",
-      "chapters": 2,
-      "voice": "Brian"
-    },
-  ];
+  @override
+  State<ExploreScreen> createState() => _ExploreScreenState();
+}
+
+class _ExploreScreenState extends State<ExploreScreen> {
+  List<Map<String, dynamic>> _podcasts = [];
+  bool _isLoading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _fetchCoursesFromS3();
+  }
+
+  Future<void> _fetchCoursesFromS3() async {
+    try {
+      final url = Uri.parse("https://echopod-content.s3.amazonaws.com/courses/index.json");
+      final response = await http.get(url);
+      if (response.statusCode == 200) {
+        final data = json.decode(response.body);
+        final List<dynamic> courses = data['courses'];
+
+        setState(() {
+          _podcasts = courses.map<Map<String, dynamic>>((e) => Map<String, dynamic>.from(e)).toList();
+          _isLoading = false;
+        });
+      } else {
+        throw Exception('Failed to fetch course list');
+      }
+    } catch (e) {
+      debugPrint("❌ Error fetching courses: $e");
+      setState(() => _isLoading = false);
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: const Color(0xFFF6F0FA),
-      body: ListView.builder(
-        itemCount: _dummyPodcasts.length,
+      body: _isLoading
+          ? const Center(child: CircularProgressIndicator())
+          : ListView.builder(
+        itemCount: _podcasts.length,
         padding: const EdgeInsets.all(16),
         itemBuilder: (context, index) {
-          final podcast = _dummyPodcasts[index];
+          final podcast = _podcasts[index];
           return InkWell(
             onTap: () {
               Navigator.push(
@@ -57,7 +72,6 @@ class ExploreScreen extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    // Title
                     Text(
                       podcast['topic'],
                       style: const TextStyle(
@@ -66,8 +80,6 @@ class ExploreScreen extends StatelessWidget {
                       ),
                     ),
                     const SizedBox(height: 8),
-
-                    // Description
                     Text(
                       podcast['desc'],
                       style: const TextStyle(
@@ -78,8 +90,6 @@ class ExploreScreen extends StatelessWidget {
                       overflow: TextOverflow.ellipsis,
                     ),
                     const SizedBox(height: 12),
-
-                    // Tags: Difficulty, Chapters, Voice
                     Wrap(
                       spacing: 8,
                       runSpacing: 8,

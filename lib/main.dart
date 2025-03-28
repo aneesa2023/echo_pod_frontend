@@ -9,11 +9,9 @@ import 'package:flutter/material.dart';
 import 'package:amplify_flutter/amplify_flutter.dart';
 import 'package:amplify_auth_cognito/amplify_auth_cognito.dart';
 
-void main() async {
+Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  // await dotenv.load(fileName: ".env");
-  // final secureStorage = AmplifySecureStorageDart();
-  // Amplify.registerDependencies(secureStorage: secureStorage);
+
   try {
     await Amplify.addPlugin(AmplifyAuthCognito());
     await Amplify.configure(amplifyconfig);
@@ -21,11 +19,25 @@ void main() async {
     safePrint("Amplify error: $e");
   }
 
-  runApp(const EchoPodApp());
+  final isLoggedIn = await checkUserLoggedIn();
+
+  runApp(EchoPodApp(isLoggedIn: isLoggedIn));
 }
 
+Future<bool> checkUserLoggedIn() async {
+  try {
+    final session = await Amplify.Auth.fetchAuthSession();
+    return session.isSignedIn;
+  } catch (e) {
+    safePrint("Session fetch error: $e");
+    return false;
+  }
+}
+
+
 class EchoPodApp extends StatelessWidget {
-  const EchoPodApp({super.key});
+  final bool isLoggedIn;
+  const EchoPodApp({super.key, required this.isLoggedIn});
 
   @override
   Widget build(BuildContext context) {
@@ -33,7 +45,7 @@ class EchoPodApp extends StatelessWidget {
       title: 'EchoPod',
       theme: echoPodTheme,
       debugShowCheckedModeBanner: false,
-      initialRoute: '/login',
+      initialRoute: isLoggedIn ? '/menu' : '/login',
       routes: {
         '/login': (context) => LoginScreen(),
         '/signup': (context) => SignupScreen(),

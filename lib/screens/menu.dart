@@ -1,3 +1,4 @@
+import 'package:echo_pod_frontend/screens/mini_audio_player.dart';
 import 'package:flutter/material.dart';
 import 'package:echo_pod_frontend/screens/create_podcast.dart';
 import 'package:echo_pod_frontend/screens/explore.dart';
@@ -31,7 +32,8 @@ class _MenuScreenState extends State<MenuScreen> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('EchoPod'),
-        iconTheme: const IconThemeData(color: Colors.white), // White drawer icon
+        iconTheme:
+            const IconThemeData(color: Colors.white), // White drawer icon
       ),
       drawer: Drawer(
         child: ListView(
@@ -61,7 +63,16 @@ class _MenuScreenState extends State<MenuScreen> {
           ],
         ),
       ),
-      body: _screens[_selectedIndex],
+      body: Column(
+        children: [
+          Expanded(child: _screens[_selectedIndex]),
+          // MiniAudioPlayer(currentTitle: '',
+          //   onExpand: () {
+          //     Navigator.pushNamed(context, '/audio');
+          //   },
+          // ),
+        ],
+      ),
       bottomNavigationBar: BottomNavigationBar(
         currentIndex: _selectedIndex,
         selectedItemColor: kMainColor,
