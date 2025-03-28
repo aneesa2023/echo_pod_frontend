@@ -37,14 +37,6 @@ EchoPod is an AI-powered podcast learning app that transforms complex topics int
 
 ---
 
-## 📸 Screenshots
-
-| Home | Explore | Podcast Detail | Audio Player |
-|------|---------|----------------|---------------|
-| ![Home](screenshots/home.png) | ![Explore](screenshots/explore.png) | ![Detail](screenshots/detail.png) | ![Player](screenshots/player.png) |
-
----
-
 ## 🛠️ Setup Instructions
 
 1. **Clone the repo**
