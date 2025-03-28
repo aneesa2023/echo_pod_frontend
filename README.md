@@ -69,9 +69,6 @@ Amplify.Auth.signIn(...)
 Amplify.Auth.signOut(...)
 
 📦 Project Structure
-bash
-Copy
-Edit
 lib/
 ├── screens/
 │   ├── home.dart
