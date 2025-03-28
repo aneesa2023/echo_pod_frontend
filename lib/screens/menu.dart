@@ -1,3 +1,4 @@
+import 'package:echo_pod_frontend/screens/home.dart';
 import 'package:echo_pod_frontend/screens/mini_audio_player.dart';
 import 'package:flutter/material.dart';
 import 'package:echo_pod_frontend/screens/create_podcast.dart';
@@ -15,10 +16,9 @@ class _MenuScreenState extends State<MenuScreen> {
   int _selectedIndex = 0;
 
   static final List<Widget> _screens = <Widget>[
-    Center(child: Text("Home Screen")),
     CreatePodcast(),
+    HomeScreen(),
     ExploreScreen(),
-    Center(child: Text("Profile Placeholder")),
   ];
 
   void _onItemTapped(int index) {
@@ -78,8 +78,8 @@ class _MenuScreenState extends State<MenuScreen> {
         selectedItemColor: kMainColor,
         onTap: _onItemTapped,
         items: const [
-          BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Home'),
           BottomNavigationBarItem(icon: Icon(Icons.mic), label: 'Compose'),
+          BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Home'),
           BottomNavigationBarItem(icon: Icon(Icons.explore), label: 'Explore'),
         ],
       ),

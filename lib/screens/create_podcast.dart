@@ -18,7 +18,7 @@ class _CreatePodcastState extends State<CreatePodcast> {
   final _formKey = GlobalKey<FormState>();
   final TextEditingController _topicController = TextEditingController();
   final TextEditingController _descController = TextEditingController();
-  final TextEditingController _chaptersController = TextEditingController();
+  int _selectedChapters = 1;
 
   String _category = "Technical & Programming";
   String _difficulty = "BEGINNER";
@@ -52,14 +52,15 @@ class _CreatePodcastState extends State<CreatePodcast> {
   ];
 
   Future<void> submitTopic() async {
-    final url = Uri.parse("https://2vyfajwiq2.execute-api.us-east-1.amazonaws.com/dev/store-topic");
+    final url = Uri.parse(
+        "https://2vyfajwiq2.execute-api.us-east-1.amazonaws.com/dev/store-topic");
 
     final payload = {
       "category": _category,
       "topic": _topicController.text.trim(),
       "desc": _descController.text.trim(),
       "level_of_difficulty": _difficulty,
-      "chapters": int.tryParse(_chaptersController.text) ?? 1,
+      "chapters": _selectedChapters,
       "Tone": _tone,
       "Voice": _voice,
     };
@@ -83,7 +84,8 @@ class _CreatePodcastState extends State<CreatePodcast> {
           onMessage: (msg) {
             print("\u{1F4E5} Notification received: $msg");
             final decoded = json.decode(msg);
-            if (decoded['message'] == 'Content generation completed successfully') {
+            if (decoded['message'] ==
+                'Content generation completed successfully') {
               Fluttertoast.showToast(msg: "Podcast ready! Fetching content...");
             }
           },
@@ -99,7 +101,7 @@ class _CreatePodcastState extends State<CreatePodcast> {
                     "topic": _topicController.text.trim(),
                     "desc": _descController.text.trim(),
                     "difficulty": _difficulty,
-                    "chapters": _chaptersController.text.trim(),
+                    "chapters": _selectedChapters,
                     "voice": _voice,
                     "Tone": _tone,
                     "category": _category,
@@ -132,7 +134,7 @@ class _CreatePodcastState extends State<CreatePodcast> {
     return Stack(
       children: [
         SingleChildScrollView(
-          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 30),
+          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 0),
           child: Form(
             key: _formKey,
             child: Column(
@@ -141,23 +143,48 @@ class _CreatePodcastState extends State<CreatePodcast> {
                 _buildLabel("Topic"),
                 _buildTextField(_topicController, "Enter your topic"),
                 _buildLabel("Description"),
-                _buildTextField(_descController, "Write a short description", maxLines: 3),
+                _buildTextField(_descController, "Write a short description",
+                    maxLines: 3),
                 _buildLabel("Category"),
-                _buildDropdown(value: _category, items: _categories, onChanged: (val) => setState(() => _category = val!)),
+                _buildDropdown(
+                    value: _category,
+                    items: _categories,
+                    onChanged: (val) => setState(() => _category = val!)),
                 _buildLabel("Difficulty"),
-                _buildDropdown(value: _difficulty, items: _difficultyLevels, onChanged: (val) => setState(() => _difficulty = val!)),
+                _buildDropdown(
+                    value: _difficulty,
+                    items: _difficultyLevels,
+                    onChanged: (val) => setState(() => _difficulty = val!)),
                 _buildLabel("Number of Chapters"),
-                _buildTextField(_chaptersController, "e.g. 1", keyboardType: TextInputType.number),
+                DropdownButtonFormField<int>(
+                  value: _selectedChapters,
+                  onChanged: (val) => setState(() => _selectedChapters = val!),
+                  items: List.generate(10, (i) => i + 1)
+                      .map((e) =>
+                          DropdownMenuItem(value: e, child: Text(e.toString())))
+                      .toList(),
+                  decoration: InputDecoration(
+                    filled: true,
+                    fillColor: Colors.white,
+                    contentPadding:
+                        const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      borderSide: BorderSide.none,
+                    ),
+                  ),
+                ),
                 _buildLabel("Tone"),
-                _buildDropdown(value: _tone, items: _tones, onChanged: (val) => setState(() => _tone = val!)),
-                _buildLabel("Voice"),
-                _buildTextField(null, "e.g. Danielle", initialValue: _voice, onChanged: (val) => _voice = val),
-                const SizedBox(height: 30),
+                _buildDropdown(
+                    value: _tone,
+                    items: _tones,
+                    onChanged: (val) => setState(() => _tone = val!)),
+                const SizedBox(height: 10),
                 SizedBox(
                   width: double.infinity,
                   child: ElevatedButton(
                     onPressed: _isLoading ? null : submitTopic,
-                    child: const Text("Submit", style: TextStyle(fontSize: 16)),
+                    child: const Text("Generate Course", style: TextStyle(fontSize: 16)),
                   ),
                 ),
               ],
@@ -169,36 +196,39 @@ class _CreatePodcastState extends State<CreatePodcast> {
             color: Colors.black.withOpacity(0.5),
             child: const Center(child: CircularProgressIndicator()),
           ),
-        if (audioController.isPlaying)
-          Align(
-            alignment: Alignment.bottomCenter,
-            child: MiniAudioPlayer(
-              onExpand: () => audioController.expandFullPlayer(context),
-              currentTitle: '',
-            ),
-          ),
+        // if (audioController.isPlaying)
+        //   Align(
+        //     alignment: Alignment.bottomCenter,
+        //     child: MiniAudioPlayer(
+        //       onExpand: () => audioController.expandFullPlayer(context),
+        //       currentTitle: '',
+        //     ),
+        //   ),
       ],
     );
   }
 
   Widget _buildLabel(String text) {
     return Padding(
-      padding: const EdgeInsets.only(top: 20, bottom: 8),
+      padding: const EdgeInsets.only(top: 10, bottom: 8),
       child: Text(
         text,
-        style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: Colors.deepPurple),
+        style: const TextStyle(
+            fontSize: 14,
+            fontWeight: FontWeight.w600,
+            color: Colors.deepPurple),
       ),
     );
   }
 
   Widget _buildTextField(
-      TextEditingController? controller,
-      String hint, {
-        int maxLines = 1,
-        TextInputType keyboardType = TextInputType.text,
-        String? initialValue,
-        void Function(String)? onChanged,
-      }) {
+    TextEditingController? controller,
+    String hint, {
+    int maxLines = 1,
+    TextInputType keyboardType = TextInputType.text,
+    String? initialValue,
+    void Function(String)? onChanged,
+  }) {
     return TextFormField(
       controller: controller,
       initialValue: initialValue,
@@ -209,7 +239,8 @@ class _CreatePodcastState extends State<CreatePodcast> {
         hintText: hint,
         filled: true,
         fillColor: Colors.white,
-        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+        contentPadding:
+            const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
           borderSide: BorderSide.none,
@@ -226,7 +257,8 @@ class _CreatePodcastState extends State<CreatePodcast> {
     return DropdownButtonFormField<String>(
       value: value,
       onChanged: onChanged,
-      items: items.map((e) => DropdownMenuItem(value: e, child: Text(e))).toList(),
+      items:
+          items.map((e) => DropdownMenuItem(value: e, child: Text(e))).toList(),
       decoration: InputDecoration(
         filled: true,
         fillColor: Colors.white,

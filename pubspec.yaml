@@ -44,7 +44,9 @@ dependencies:
   amplify_secure_storage: ^0.5.8
   amplify_secure_storage_dart: ^0.5.4
   audioplayers: ^6.4.0
-  web_socket_channel: ^3.0.2
+  web_socket_channel: ^2.4.0
+  amplify_datastore: ^2.6.1
+  amplify_api: ^2.6.1
 
 dev_dependencies:
   flutter_test:

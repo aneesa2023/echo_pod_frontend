@@ -13,7 +13,6 @@ class _LoginScreenState extends State<LoginScreen> {
   final emailController = TextEditingController();
   final passwordController = TextEditingController();
   final codeController = TextEditingController();
-
   bool showConfirmation = false;
 
   Future<void> signUp() async {
@@ -32,9 +31,7 @@ class _LoginScreenState extends State<LoginScreen> {
       setState(() => showConfirmation = true);
 
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-            content: Text(
-                "Signup successful. Check your email for the confirmation code.")),
+        const SnackBar(content: Text("Check your email for the confirmation code.")),
       );
     } catch (e) {
       safePrint("Signup error: $e");
@@ -71,7 +68,6 @@ class _LoginScreenState extends State<LoginScreen> {
   Future<void> signIn() async {
     try {
       final session = await Amplify.Auth.fetchAuthSession();
-
       if (session.isSignedIn) {
         await Amplify.Auth.signOut();
       }
@@ -100,66 +96,77 @@ class _LoginScreenState extends State<LoginScreen> {
     return Scaffold(
       backgroundColor: const Color(0xFFF6F0FA),
       body: Center(
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 24),
-          child: SingleChildScrollView(
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                const Text("EchoPod Login",
-                    style:
-                        TextStyle(fontSize: 24, fontWeight: FontWeight.bold)),
-                const SizedBox(height: 32),
-                TextField(
-                  controller: emailController,
-                  decoration: const InputDecoration(labelText: "Email"),
-                ),
-                const SizedBox(height: 12),
-                TextField(
-                  controller: passwordController,
-                  decoration: const InputDecoration(labelText: "Password"),
-                  obscureText: true,
-                ),
-                const SizedBox(height: 24),
-                if (showConfirmation) ...[
-                  TextField(
-                    controller: codeController,
-                    decoration:
-                        const InputDecoration(labelText: "Confirmation Code"),
-                  ),
-                  const SizedBox(height: 16),
-                  ElevatedButton(
-                    onPressed: confirmSignUp,
-                    child: const Text("Confirm Code"),
-                  ),
-                  const SizedBox(height: 12),
-                ],
-                ElevatedButton(
-                  onPressed: signIn,
-                  child: const Text("Login"),
-                ),
-                const SizedBox(height: 10),
-                TextButton(
-                  onPressed: () {
-                    Navigator.pushNamed(context, '/signup');
-                  },
-                  child: const Text("Don't have an account? Sign up"),
-                ),
-                ElevatedButton(
-                  onPressed: () async {
-                    try {
-                      await Amplify.Auth.signOut();
-                      Navigator.pushReplacementNamed(context, '/login');
-                    } catch (e) {
-                      safePrint("Logout error: $e");
-                    }
-                  },
-                  child: const Text("Logout"),
-                ),
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 30),
+          child: Card(
+            elevation: 4,
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 32),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const Text("Welcome to EchoPod",
+                      style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold)),
+                  const SizedBox(height: 8),
+                  const Text("Sign in to your account",
+                      style: TextStyle(fontSize: 14, color: Colors.grey)),
 
-              ],
+                  const SizedBox(height: 28),
+                  _buildTextField(emailController, "Email", Icons.email),
+                  const SizedBox(height: 16),
+                  _buildTextField(passwordController, "Password", Icons.lock, obscure: true),
+
+                  if (showConfirmation) ...[
+                    const SizedBox(height: 20),
+                    _buildTextField(codeController, "Confirmation Code", Icons.verified),
+                    const SizedBox(height: 12),
+                    ElevatedButton(
+                      onPressed: confirmSignUp,
+                      style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.deepPurple),
+                      child: const Text("Confirm Code"),
+                    ),
+                    const SizedBox(height: 12),
+                  ],
+
+                  const SizedBox(height: 20),
+                  ElevatedButton(
+                    onPressed: signIn,
+                    style: ElevatedButton.styleFrom(
+                        minimumSize: const Size.fromHeight(45),
+                        backgroundColor: Colors.deepPurple),
+                    child: const Text("Login"),
+                  ),
+
+                  const SizedBox(height: 10),
+                  TextButton(
+                    onPressed: () => signUp(),
+                    child: const Text("Don't have an account? Sign up"),
+                  ),
+                ],
+              ),
             ),
           ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildTextField(TextEditingController controller, String hint, IconData icon,
+      {bool obscure = false}) {
+    return TextField(
+      controller: controller,
+      obscureText: obscure,
+      decoration: InputDecoration(
+        prefixIcon: Icon(icon, color: Colors.deepPurple),
+        hintText: hint,
+        filled: true,
+        fillColor: Colors.white,
+        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(14),
+          borderSide: BorderSide.none,
         ),
       ),
     );
